@@ -4,13 +4,15 @@ use risc0_zkvm::guest::env;
 //use sha2::{Digest as _, Sha256};
 
 fn main() {
-
     // read the input
-    let _input: BaseInputs = env::read();
+    let input: BaseInputs = env::read();
 
-    // TODO: do something with the input
-    let output= BaseJournal::default();
+    // Fill the output journal with the required fields
+    let output = BaseJournal {
+        gameid: input.gameid,
+        fleetid: input.fleetid,
+        board: Default::default(), // Not needed for wave, but required by struct
+    };
 
-    // write public output to the journal
     env::commit(&output);
 }
