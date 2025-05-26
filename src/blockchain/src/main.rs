@@ -155,6 +155,36 @@ fn handle_join(shared: &SharedData, input_data: &CommunicationData) -> String {
 
 fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
      // TO DO:
+     if input_data.receipt.verify(JOIN_ID).is_err() {
+        shared.tx.send("Attempting to fire with invalid reciept".to_string()).unwrap();
+        return "Could not verify receipt".to_string();
+    }
+    
+    let data: BaseJournal = input_data.receipt.journal.decode().unwrap();
+
+    let mut gmap = shared.gmap.lock().unwrap();
+    if let Some(game) = gmap.get(&data.gameid) { //get the game with game id
+        if game.pmap.contains_key(&data.fleet) { //check if the fleet exists
+            if game.pmap.contains_key(&data.targetfleet) { //check if the fleet exists
+                let msg = format("Player {} fired at player {} at {} {}", data.fleet, data.targetfleet, data.X, data.Y );
+                shared.tx.send(msg.to_string()).unwrap();
+            }
+            else{
+                let msg = format("Player {} not in game", data.targetfleet);
+                shared.tx.send(msg.to_string()).unwrap();
+            }
+        }
+        else{
+            let msg = format("Player {} not in game", data.fleet);
+            shared.tx.send(msg.to_string()).unwrap();
+        }
+
+    }
+    else{
+            let msg = format("Game {} does not exists", data.gameid);
+            shared.tx.send(msg.to_string()).unwrap();
+    }
+ 
     "OK".to_string()
 }
 
