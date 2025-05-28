@@ -7,28 +7,24 @@ fn main() {
     // read the input
     let input: FireInputs = env::read();
 
-    // Hash the random nonce and the board together as evidence
+    // Compute the hash h using the random nonce and fleetid
     let mut hasher = Sha256::new();
     hasher.update(input.random.as_bytes());
-    hasher.update(&input.board);
+    hasher.update(input.fleetid.as_bytes());
     let hash_result = hasher.finalize();
-    let board_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
+    let fleet_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
 
-    // Check if the shot is a hit or miss
-    let is_hit = input.board.get(input.pos as usize).copied().unwrap_or(0) != 0;
-    let report = if is_hit { "hit".to_string() } else { "miss".to_string() };
+    // Use the provided report_ value directly
+    let report = input.report_.clone();
 
-    // For simplicity, next_board is the same as board (unless you want to update it)
-    let next_board_digest = board_digest.clone();
-
-    // Fill the output journal
+    // Fill the output journal with the required fields
     let output = ReportJournal {
         gameid: input.gameid,
         fleetid: input.fleetid,
         report,
         pos: input.pos,
-        board: board_digest,
-        next_board: next_board_digest,
+        board: fleet_digest,
+        next_board: fleet_digest.clone(),
     };
 
     env::commit(&output);
