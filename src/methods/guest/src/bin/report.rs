@@ -15,16 +15,48 @@ fn main() {
     let fleet_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
 
     // Use the provided report_ value directly
-    let report = input.report_.clone();
+    let _report = input._report.clone();
+    let board = input.board.clone();
+    let gameid = input.gameid;
+    let fleetid = input.fleetid;
+    let x = input.pos.0;
+    let y = input.pos.1;
+
+    // Hash the current board
+    let mut hasher = Sha256::new();
+    hasher.update(&board);
+    let hash_result = hasher.finalize();
+    let old_board_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
+
+    // Check if the shot is a hit or miss
+    let is_hit = board.get((y * 10 + x) as usize).copied().unwrap_or(0) != 0;
+    let report = if is_hit { "hit".to_string() } else { "miss".to_string() };
+
+    // Compare _report and report
+    if _report != report {
+        panic!("Provided report does not match actual result");
+    }
+
+    // Alter the board if it was a hit
+    let mut altered_board = board.clone();
+    if is_hit {
+        altered_board[(y * 10 + x) as usize] = 0; // Mark the position as hit
+    }
+
+    // Hash the altered board
+    let mut hasher = Sha256::new();
+    hasher.update(&altered_board);
+    let hash_result = hasher.finalize();
+    let new_board_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
 
     // Fill the output journal with the required fields
     let output = ReportJournal {
-        gameid: input.gameid,
-        fleetid: input.fleetid,
+        gameid,
+        fleetid,
         report,
-        pos: input.pos,
-        board: fleet_digest,
-        next_board: fleet_digest.clone(),
+        pos: (x, y),
+        board: old_board_digest,
+        next_board: new_board_digest,
     };
 
     env::commit(&output);
