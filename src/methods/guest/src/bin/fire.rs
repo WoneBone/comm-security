@@ -10,6 +10,8 @@ fn main() {
     // Verify that at least one ship is not sunk
     let has_unsunk_ship = input.board.iter().any(|&cell| cell != 0);
 
+    assert!(has_unsunk_ship);
+
     // Hash your board state for evidence
     let mut hasher = Sha256::new();
     hasher.update(&input.board);
@@ -19,10 +21,10 @@ fn main() {
     // Fill the output journal with the required fields
     let output = FireJournal {
         gameid: input.gameid,
-        fleetid: input.fleetid,
-        targetfleet: input.targetfleet,
+        fleet: input.fleet,
+        target: input.target,
         board: board_digest,
-        has_unsunk_ship,
+        pos: input.pos,
     };
 
     // Commit the output to the journal

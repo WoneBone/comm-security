@@ -61,6 +61,8 @@ fn main() {
     // Validate the board and include the result in the journal
     let is_valid = validate_board(&input.board);
 
+    assert!(is_valid);
+
     // Hash the random nonce and the board together as evidence
     let mut hasher = Sha256::new();
     hasher.update(input.random.as_bytes());
@@ -71,9 +73,9 @@ fn main() {
     // Fill the output journal with the required fields
     let output = BaseJournal {
         gameid: input.gameid,
-        fleetid: input.fleetid,
+        fleet: input.fleet,
         board: board_digest,
-        is_valid,
+        //is_valid,
     };
 
     env::commit(&output);

@@ -10,7 +10,7 @@ fn main() {
     // Fill the output journal with the required fields
     let output = BaseJournal {
         gameid: input.gameid,
-        fleetid: input.fleetid,
+        fleet: input.fleet,
         board: Default::default(), // Not needed for wave, but required by struct
     };
 
