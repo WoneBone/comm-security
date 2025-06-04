@@ -10,7 +10,7 @@ fn main() {
     // Compute the hash h using the random nonce and fleetid
     let mut hasher = Sha256::new();
     hasher.update(input.random.as_bytes());
-    hasher.update(input.fleetid.as_bytes());
+    hasher.update(input.fleet.as_bytes());
     let hash_result = hasher.finalize();
     let fleet_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
 
@@ -51,8 +51,8 @@ fn main() {
 
     // Fill the output journal with the required fields
     let output = ReportJournal {
-        gameid,
-        fleetid,
+        gameid: input.gameid,
+        fleet: input.fleet,
         report,
         pos: (x, y),
         board: old_board_digest,

@@ -16,9 +16,10 @@ fn main() {
     // Fill the output journal with the required fields
     let output = BaseJournal {
         gameid: input.gameid,
-        fleetid: input.fleetid,
+        fleet: input.fleet,
         board: board_digest,
-        is_valid: true, // Claiming victory
+        //is_valid: true, // Claiming victory
+        //Tens que dar assert
     };
 
     // Commit the output to the journal
