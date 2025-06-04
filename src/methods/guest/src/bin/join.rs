@@ -63,9 +63,7 @@ fn main() {
     // read the input
     let input: BaseInputs = env::read();
 
-    // Extract variables to match game_actions.rs naming
-    let gameid = input.gameid.clone();
-    let fleetid = input.fleet.clone(); // In BaseInputs it's called 'fleet' but in game_actions.rs it's 'fleetid'
+    // Extract variables
     let board = input.board.clone();
     let random = input.random.clone();
 
@@ -86,7 +84,6 @@ fn main() {
         gameid: input.gameid,
         fleet: input.fleet,
         board: board_digest,
-        is_valid,
     };
 
     env::commit(&output);

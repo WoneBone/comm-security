@@ -20,8 +20,8 @@ fn main() {
     let output = FireJournal {
         gameid: input.gameid,
         fleet: input.fleet,
-        target: input.target,
         board: board_digest,
+        target: input.target,
         pos: input.pos,
     };
 

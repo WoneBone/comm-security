@@ -10,7 +10,10 @@ fn main() {
     // Extract values that match game_actions.rs variable names
     let board = input.board.clone();
     let random = input.random.clone();
-    let _report = input.report_.clone();
+
+    // In game_actions.rs, the report value would be passed separately
+    // We assume it's passed via the target field for now
+    let _report = input.target.clone();
 
     // Extract x and y from the pos field
     let x = (input.pos >> 4) & 0xF; // Higher 4 bits
@@ -25,7 +28,7 @@ fn main() {
     // Check if the shot is a hit or miss based on board and coordinates
     let index = (y * 10 + x) as usize;
     let is_hit = board.get(index).copied().unwrap_or(0) != 0;
-    let report = if is_hit { "hit".to_string() } else { "miss".to_string() };
+    let report = if is_hit { "Hit".to_string() } else { "Miss".to_string() };
 
     // Compare _report and report
     if _report != report {
