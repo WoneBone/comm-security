@@ -78,7 +78,7 @@ async fn index() -> Html<&'static str> {
             <title>Blockchain Emulator</title>
         </head>
         <body>
-            <h1>Registered Transactions</h1>          
+            <h1>Registered Transactions</h1>
             <ul id="logs"></ul>
             <script>
                 const eventSource = new EventSource('/logs');
@@ -158,7 +158,7 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
         shared.tx.send("Attempting to fire with invalid reciept".to_string()).unwrap();
         return "Could not verify receipt".to_string();
     }
-    
+
     let data: BaseJournal = input_data.receipt.journal.decode().unwrap();
 
     let mut gmap = shared.gmap.lock().unwrap();
@@ -183,7 +183,7 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
             let msg = format("Game {} does not exists", data.gameid);
             shared.tx.send(msg.to_string()).unwrap();
     }
- 
+
     "OK".to_string()
 }
 
@@ -198,7 +198,7 @@ fn handle_wave(shared: &SharedData, input_data: &CommunicationData) -> String {
         shared.tx.send("Attempting to wave with invalid reciept".to_string()).unwrap();
         return "Could not verify receipt".to_string();
     }
-    
+
     let data: BaseJournal = input_data.receipt.journal.decode().unwrap();
 
     let mut gmap = shared.gmap.lock().unwrap();

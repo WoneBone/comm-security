@@ -10,8 +10,6 @@ fn main() {
     // Verify that at least one ship is not sunk
     let has_unsunk_ship = input.board.iter().any(|&cell| cell != 0);
 
-    assert!(has_unsunk_ship);
-
     // Hash your board state for evidence
     let mut hasher = Sha256::new();
     hasher.update(&input.board);

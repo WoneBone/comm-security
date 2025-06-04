@@ -17,26 +17,30 @@ fn validate_board(board: &[u8]) -> bool {
         return false;
     }
 
+    // Create a mutable copy of the board
+    let mut board_copy = board.to_vec();
     let mut boat_counts = [0; 6]; // Index 0 unused, sizes 1-5 tracked
 
     for y in 0..10 {
         for x in 0..10 {
             let idx = y * 10 + x;
-            if board[idx] > 0 {
-                let size = board[idx] as usize;
+            if board_copy[idx] > 0 {
+                let size = board_copy[idx] as usize;
                 if size > 5 {
                     return false;
                 }
                 boat_counts[size] += 1;
 
                 // Check horizontal and vertical continuity
-                if x + size <= 10 && board[idx..idx + size].iter().all(|&v| v == board[idx]) {
+                if x + size <= 10 && (0..size).all(|i| board_copy[idx + i] == board_copy[idx]) {
+                    // Mark horizontal ship as visited
                     for i in 0..size {
-                        board[idx + i] = 0; // Mark as visited
+                        board_copy[idx + i] = 0;
                     }
-                } else if y + size <= 10 && (0..size).all(|i| board[idx + i * 10] == board[idx]) {
+                } else if y + size <= 10 && (0..size).all(|i| board_copy[idx + i * 10] == board_copy[idx]) {
+                    // Mark vertical ship as visited
                     for i in 0..size {
-                        board[idx + i * 10] = 0; // Mark as visited
+                        board_copy[idx + i * 10] = 0;
                     }
                 } else {
                     return false;
@@ -45,6 +49,7 @@ fn validate_board(board: &[u8]) -> bool {
         }
     }
 
+    // Check that we have the correct number of each boat size
     for &(size, count) in &BOAT_SIZES {
         if boat_counts[size as usize] != count {
             return false;
@@ -58,15 +63,21 @@ fn main() {
     // read the input
     let input: BaseInputs = env::read();
 
-    // Validate the board and include the result in the journal
-    let is_valid = validate_board(&input.board);
+    // Extract variables to match game_actions.rs naming
+    let gameid = input.gameid.clone();
+    let fleetid = input.fleet.clone(); // In BaseInputs it's called 'fleet' but in game_actions.rs it's 'fleetid'
+    let board = input.board.clone();
+    let random = input.random.clone();
+
+    // Validate the board
+    let is_valid = validate_board(&board);
 
     assert!(is_valid);
 
     // Hash the random nonce and the board together as evidence
     let mut hasher = Sha256::new();
-    hasher.update(input.random.as_bytes());
-    hasher.update(&input.board);
+    hasher.update(random.as_bytes());
+    hasher.update(&board);
     let hash_result = hasher.finalize();
     let board_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
 
@@ -75,7 +86,7 @@ fn main() {
         gameid: input.gameid,
         fleet: input.fleet,
         board: board_digest,
-        //is_valid,
+        is_valid,
     };
 
     env::commit(&output);

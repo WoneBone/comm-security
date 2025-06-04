@@ -7,9 +7,18 @@ fn main() {
     // Read the input
     let input: BaseInputs = env::read();
 
-    // Hash your board state for evidence
+    // Extract variables to match those in game_actions.rs
+    let board = input.board.clone();
+    let random = input.random.clone();
+
+    // In a zero-knowledge implementation, we verify that we have at least one ship remaining (our fleet is not sunk) as part of claiming victory
+    let has_unsunk_ship = board.iter().any(|&cell| cell != 0);
+    assert!(has_unsunk_ship, "Cannot claim victory with a completely sunk fleet");
+
+    // Hash your board state as evidence that your fleet still exists
     let mut hasher = Sha256::new();
-    hasher.update(&input.board);
+    hasher.update(&board);
+    hasher.update(random.as_bytes()); // Add random for uniqueness
     let hash_result = hasher.finalize();
     let board_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
 
@@ -18,8 +27,6 @@ fn main() {
         gameid: input.gameid,
         fleet: input.fleet,
         board: board_digest,
-        //is_valid: true, // Claiming victory
-        //Tens que dar assert
     };
 
     // Commit the output to the journal
