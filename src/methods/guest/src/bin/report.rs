@@ -5,15 +5,14 @@ use sha2::{Digest as ShaDigest, Sha256};
 
 fn main() {
     // read the input
-    let input: FireInputs = env::read();
+    let input: ReportInputs = env::read();
 
     // Extract values that match game_actions.rs variable names
     let board = input.board.clone();
     let random = input.random.clone();
 
     // In game_actions.rs, the report value would be passed separately
-    // We assume it's passed via the target field for now
-    let _report = input.target.clone();
+    let _report = input.report.clone();
 
     // Extract x and y from the pos field
     let x = (input.pos >> 4) & 0xF; // Higher 4 bits

@@ -11,7 +11,7 @@ pub struct BaseInputs {
     pub random: String,
 }
 
-// Struct sent by the rust code for input on the methods fire and report
+// Struct sent by the rust code for input on the methods fire
 // The struct is read by the zkvm code and the data is used to generate the output Journal
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct FireInputs {
@@ -20,6 +20,18 @@ pub struct FireInputs {
     pub board: Vec<u8>,
     pub random: String,
     pub target: String,
+    pub pos: u8,
+}
+
+// Struct sent by the rust code for input on the methods report
+// The struct is read by the zkvm code and the data is used to generate the output Journal
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct ReportInputs {
+    pub gameid: String,
+    pub fleet: String,
+    pub board: Vec<u8>,
+    pub random: String,
+    pub report: String,
     pub pos: u8,
 }
 

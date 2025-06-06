@@ -12,13 +12,6 @@ pub async fn join_game(idata: FormData) -> String {
         Err(err) => return err,
     };
 
-    // TO DO: Rebuild the receipt
-
-    // Uncomment the following line when you are ready to send the receipt
-    //send_receipt(Command::Fire, receipt).await
-    // Comment out the following line when you are ready to send the receipt
-    // "OK".to_string()
-
     // Set up the zkVM environment
     let receipt = {
         let env = ExecutorEnv::builder()

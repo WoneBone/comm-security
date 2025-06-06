@@ -155,11 +155,11 @@ fn handle_join(shared: &SharedData, input_data: &CommunicationData) -> String {
 
 fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
      if input_data.receipt.verify(FIRE_ID).is_err() {
-        shared.tx.send("Attempting to fire with invalid reciept".to_string()).unwrap();
+        shared.tx.send("Attempting to fire with invalid receipt".to_string()).unwrap();
         return "Could not verify receipt".to_string();
     }
 
-    let data: BaseJournal = input_data.receipt.journal.decode().unwrap();
+    let data: FireJournal = input_data.receipt.journal.decode().unwrap();
 
     let mut gmap = shared.gmap.lock().unwrap();
     if let Some(game) = gmap.get(&data.gameid) { //get the game with game id
