@@ -7,11 +7,15 @@ fn main() {
     // Read the input
     let input: FireInputs = env::read();
 
+    // Extract the random value
+    let random = input.random.clone();
+
     // Verify that at least one ship is not sunk
-    let has_unsunk_ship = input.board.iter().any(|&cell| cell != 0);
+    let _has_unsunk_ship = input.board.iter().any(|&cell| cell != 0);
 
     // Hash your board state for evidence
     let mut hasher = Sha256::new();
+    hasher.update(random.as_bytes());
     hasher.update(&input.board);
     let hash_result = hasher.finalize();
     let board_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");

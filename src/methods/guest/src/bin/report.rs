@@ -1,4 +1,4 @@
-use fleetcore::{FireInputs, ReportJournal};
+use fleetcore::{ReportInputs, ReportJournal};
 use risc0_zkvm::guest::env;
 use risc0_zkvm::Digest;
 use sha2::{Digest as ShaDigest, Sha256};
@@ -20,6 +20,7 @@ fn main() {
 
     // Hash the current board
     let mut hasher = Sha256::new();
+    hasher.update(random.as_bytes());
     hasher.update(&board);
     let hash_result = hasher.finalize();
     let old_board_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
@@ -41,9 +42,10 @@ fn main() {
     }
 
     // Hash the altered board
-    let mut hasher = Sha256::new();
-    hasher.update(&altered_board);
-    let hash_result = hasher.finalize();
+    let mut hasher2 = Sha256::new();
+    hasher2.update(random.as_bytes());
+    hasher2.update(&altered_board);
+    let hash_result = hasher2.finalize();
     let new_board_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
 
     // Fill the output journal with the required fields

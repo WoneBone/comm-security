@@ -17,8 +17,8 @@ fn main() {
 
     // Hash your board state as evidence that your fleet still exists
     let mut hasher = Sha256::new();
+    hasher.update(random.as_bytes());
     hasher.update(&board);
-    hasher.update(random.as_bytes()); // Add random for uniqueness
     let hash_result = hasher.finalize();
     let board_digest = Digest::try_from(hash_result.as_slice()).expect("Digest conversion failed");
 
