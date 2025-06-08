@@ -78,7 +78,7 @@ async fn index() -> Html<&'static str> {
             <title>Blockchain Emulator</title>
         </head>
         <body>
-            <h1>Registered Transactions</h1>
+            <h1>Registered Transactions</h1>          
             <ul id="logs"></ul>
             <script>
                 const eventSource = new EventSource('/logs');
@@ -154,22 +154,38 @@ fn handle_join(shared: &SharedData, input_data: &CommunicationData) -> String {
 }
 
 fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
-     if input_data.receipt.verify(FIRE_ID).is_err() {
-        shared.tx.send("Attempting to fire with invalid receipt".to_string()).unwrap();
+    if input_data.receipt.verify(FIRE_ID).is_err() {
+        shared.tx.send("Attempting to fire with invalid reciept".to_string()).unwrap();
         return "Could not verify receipt".to_string();
     }
 
     let data: FireJournal = input_data.receipt.journal.decode().unwrap();
 
     let mut gmap = shared.gmap.lock().unwrap();
-    if let Some(game) = gmap.get(&data.gameid) { //get the game with game id
-        if game.pmap.contains_key(&data.fleet) { //check if the fleet exists
-            if game.pmap.contains_key(&data.targetfleet) { //check if the fleet exists
-                let msg = format("Player {} fired at player {} at {} {}", data.fleet, data.targetfleet, data.X, data.Y );
-                shared.tx.send(msg.to_string()).unwrap();
+    if let Some(game) = gmap.get_mut(&data.gameid) { //get the game with game id
+        if game.pmap.contains_key(&data.fleet)  { //check if the fleet exists
+            if (game.next_player == data.fleet){ //check if it is this players turn
+                if (game.next_report.is_some()){ //check if the previous report has been addressed
+                    if game.pmap.contains_key(&data.targetfleet) { //check if the fleet exists
+
+                        game.next_player = Some(data.targetfleet.clone());
+                        game.next_report= Some(data.pos.clone());
+                        let msg = format("Player {} fired at player {} at pos {}", data.fleet, data.targetfleet, 
+                            data.pos);
+                        shared.tx.send(msg.to_string()).unwrap();
+                    }
+                    else{
+                        let msg = format("Player {} not in game", data.targetfleet);
+                        shared.tx.send(msg.to_string()).unwrap();
+                    }
+                }
+                else{
+                    let msg = format("Must address report first");
+                    shared.tx.send(msg.to_string()).unwrap();
+                }
             }
             else{
-                let msg = format("Player {} not in game", data.targetfleet);
+                let msg = format("Not your turn dummy");
                 shared.tx.send(msg.to_string()).unwrap();
             }
         }
@@ -177,18 +193,66 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
             let msg = format("Player {} not in game", data.fleet);
             shared.tx.send(msg.to_string()).unwrap();
         }
-
     }
     else{
-            let msg = format("Game {} does not exists", data.gameid);
-            shared.tx.send(msg.to_string()).unwrap();
+        let msg = format("Game {} does not exists", data.gameid);
+        shared.tx.send(msg.to_string()).unwrap();
     }
 
     "OK".to_string()
 }
 
 fn handle_report(shared: &SharedData, input_data: &CommunicationData) -> String {
-    // TO DO:
+    if input_data.receipt.verify(REPORT_ID).is_err() {
+        shared.tx.send("Attempting to fire with invalid reciept".to_string()).unwrap();
+        return "Could not verify receipt".to_string();
+    }
+
+    let data: ReportJournal = input_data.receipt.journal.decode().unwrap();
+
+    let mut gmap = shared.gmap.lock().unwrap();
+    if let Some(game) = gmap.get_mut(&data.gameid) { //get the game with game id
+        if let Some(player) = game.pmap.get_mut(&data.fleet) { //check if the fleet exists
+            if(game.next_report.is_none()){ // check if game has report
+                let msg = format("No report to handle in this game");
+                shared.tx.send(msg.to_string()).unwrap();
+            }
+            else{
+                if (game.next_player == data.fleet){ //check if turn
+                    if player.current_state == data.board{ //Check if report is for the correct
+                                                           //board
+                        if (game.next_report == data.pos){ //check if report is for the correct
+                                                           //position
+                            player.current_state = data.next_board.clone();
+                            let msg = format("Player {} reported {} at pos {}. His updated board is {}.", data.fleet, data.report, data.pos, data.next_board);
+                            shared.tx.send(msg.to_string()).unwrap();
+
+                        }
+                        else{
+                            let msg = format("Report of wrong position. Shot was at pos {}", game.next_report);
+                            shared.tx.send(msg.to_string()).unwrap();
+                        }
+                    }
+                    else{
+                        let msg = format("Report of wrong board. Current board hash is: {}", player.current_state);
+                        shared.tx.send(msg.to_string()).unwrap();
+                    }
+                }
+                else{
+                    let msg = format("Not your turn dummy");
+                    shared.tx.send(msg.to_string()).unwrap();
+                }
+            }
+        }
+        else{
+            let msg = format("Player {} not in game", data.fleet);
+            shared.tx.send(msg.to_string()).unwrap();
+        }
+    }
+    else{
+        let msg = format("Game {} does not exists", data.gameid);
+        shared.tx.send(msg.to_string()).unwrap();
+    }
     "OK".to_string()
 }
 
@@ -198,7 +262,7 @@ fn handle_wave(shared: &SharedData, input_data: &CommunicationData) -> String {
         shared.tx.send("Attempting to wave with invalid reciept".to_string()).unwrap();
         return "Could not verify receipt".to_string();
     }
-
+    
     let data: BaseJournal = input_data.receipt.journal.decode().unwrap();
 
     let mut gmap = shared.gmap.lock().unwrap();
