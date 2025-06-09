@@ -153,7 +153,8 @@ fn handle_join(shared: &SharedData, input_data: &CommunicationData) -> String {
     "OK".to_string()
 }
 
-fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {    if input_data.receipt.verify(FIRE_ID).is_err() {
+fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
+    if input_data.receipt.verify(FIRE_ID).is_err() {
         shared.tx.send("Attempting to fire with invalid receipt".to_string()).unwrap();
         return "Could not verify receipt".to_string();
     }
@@ -169,8 +170,11 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String { 
                     if game.pmap.contains_key(&data.target) { //check if the fleet exists
                         game.next_player = Some(data.target.clone());
                         game.next_report = Some(data.pos.to_string());
-                        let msg = format!("Player {} fired at player {} at pos {}", data.fleet, data.target, 
-                            data.pos);
+                        let x = data.pos % 10;
+                        let y = ((data.pos / 10) + b'A') as char;
+
+                        let msg = format!("Player {} fired at player {} at pos {}.{}", data.fleet, data.target, 
+                            x, y);
                         shared.tx.send(msg).unwrap();
                     }
 
@@ -202,7 +206,8 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String { 
     "OK".to_string()
 }
 
-fn handle_report(shared: &SharedData, input_data: &CommunicationData) -> String {    if input_data.receipt.verify(REPORT_ID).is_err() {
+fn handle_report(shared: &SharedData, input_data: &CommunicationData) -> String {
+    if input_data.receipt.verify(REPORT_ID).is_err() {
         shared.tx.send("Attempting to report with invalid receipt".to_string()).unwrap();
         return "Could not verify receipt".to_string();
     }
@@ -259,11 +264,25 @@ fn handle_wave(shared: &SharedData, input_data: &CommunicationData) -> String {
         return "Could not verify receipt".to_string();
     }
     
-    let data: BaseJournal = input_data.receipt.journal.decode().unwrap();    let gmap = shared.gmap.lock().unwrap();
+    let data: BaseJournal = input_data.receipt.journal.decode().unwrap();   
+    let gmap = shared.gmap.lock().unwrap();
     if let Some(game) = gmap.get(&data.gameid) { //get the game with game id
         if game.pmap.contains_key(&data.fleet) { //check if the fleet exists
-            let msg = format!("Player {} waves their turn", data.fleet);
-            shared.tx.send(msg).unwrap();
+            if game.next_report.is_none() { // check if game has report
+                if game.next_player == Some(data.fleet.clone()) { //check if turn
+                    let msg = format!("Player {} waves their turn", data.fleet);
+                    shared.tx.send(msg).unwrap();
+                    //game.next_player =  None;
+                }
+                else {
+                    let msg = format!("Not your turn dummy");
+                    shared.tx.send(msg).unwrap();
+                }
+            }
+            else {
+                let msg = format!("Must address report first");
+                shared.tx.send(msg).unwrap();
+            }
         }
         else {
             let msg = format!("Player {} does not exist in game {}", data.fleet, data.gameid);
