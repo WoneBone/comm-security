@@ -162,6 +162,7 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String { 
 
     let mut gmap = shared.gmap.lock().unwrap();
     if let Some(game) = gmap.get_mut(&data.gameid) { //get the game with game id
+
         if game.pmap.contains_key(&data.fleet) { //check if the fleet exists
             if game.next_player == Some(data.fleet.clone()) { //check if it is this players turn
                 if game.next_report.is_none() { //check if the previous report has been addressed
@@ -172,6 +173,7 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String { 
                             data.pos);
                         shared.tx.send(msg).unwrap();
                     }
+
                     else {
                         let msg = format!("Player {} not in game", data.target);
                         shared.tx.send(msg).unwrap();
