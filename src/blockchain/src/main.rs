@@ -170,9 +170,8 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
                     if game.pmap.contains_key(&data.target) { //check if the fleet exists
                         game.next_player = Some(data.target.clone());
                         game.next_report = Some(data.pos.to_string());
-                        let x = data.pos % 10;
-                        let y = ((data.pos / 10) + b'A') as char;
-
+                        let x = (data.pos % 10 + b'A') as char;
+                        let y = (data.pos / 10);
                         let msg = format!("Player {} fired at player {} at pos {}.{}", data.fleet, data.target, 
                             x, y);
                         shared.tx.send(msg).unwrap();
@@ -225,7 +224,12 @@ fn handle_report(shared: &SharedData, input_data: &CommunicationData) -> String 
                 if game.next_player == Some(data.fleet.clone()) { //check if turn
                     if player.current_state == data.board { //Check if report is for the correct board
                         if game.next_report == Some(data.pos.to_string()) { //check if report is for the correct position
+                                                                            
+                            let x = (data.pos % 10 + b'A') as char;
+                            let y = (data.pos / 10);
                             player.current_state = data.next_board.clone();
+                            game.next_report = None;
+
                             let msg = format!("Player {} reported {} at pos {}. His updated board is {}.", data.fleet, data.report, data.pos, data.next_board);
                             shared.tx.send(msg).unwrap();
                         }
@@ -265,14 +269,16 @@ fn handle_wave(shared: &SharedData, input_data: &CommunicationData) -> String {
     }
     
     let data: BaseJournal = input_data.receipt.journal.decode().unwrap();   
-    let gmap = shared.gmap.lock().unwrap();
-    if let Some(game) = gmap.get(&data.gameid) { //get the game with game id
+    let mut gmap = shared.gmap.lock().unwrap();
+    if let Some(game) = gmap.get_mut(&data.gameid) { //get the game with game id
         if game.pmap.contains_key(&data.fleet) { //check if the fleet exists
             if game.next_report.is_none() { // check if game has report
                 if game.next_player == Some(data.fleet.clone()) { //check if turn
                     let msg = format!("Player {} waves their turn", data.fleet);
                     shared.tx.send(msg).unwrap();
-                    //game.next_player =  None;
+                    if let Some((player, _))= game.pmap.iter().next(){
+                        game.next_player = Some(player.clone());
+                    }
                 }
                 else {
                     let msg = format!("Not your turn dummy");
