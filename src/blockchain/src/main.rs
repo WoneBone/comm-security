@@ -198,7 +198,7 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
         }
     }
     else {
-        let msg = format!("Game {} does not exist", data.gameid);
+        let msg = format!("game {} does not exist", data.gameid);
         shared.tx.send(msg).unwrap();
     }
 
@@ -304,6 +304,34 @@ fn handle_wave(shared: &SharedData, input_data: &CommunicationData) -> String {
 }
 
 fn handle_win(shared: &SharedData, input_data: &CommunicationData) -> String {
-    // TO DO:
+    if input_data.receipt.verify(WIN_ID).is_err() {
+        shared.tx.send("Attempting to win with invalid receipt".to_string()).unwrap();
+        return "Could not verify receipt".to_string();
+    }
+    let data: BaseJournal = input_data.receipt.journal.decode().unwrap();
+
+    let mut gmap = shared.gmap.lock().unwrap();
+    if let Some(game) = gmap.get_mut(&data.gameid) { //get the game with game id
+        if let Some(player) = game.pmap.get_mut(&data.fleet) { //check if the fleet exists
+            if player.current_state == data.board { //Check if report is for the correct board
+                let msg = format!("Player {} claimed victory", data.fleet);
+                shared.tx.send(msg).unwrap();
+            }
+            else {
+                let msg = format!("Player {} claiming victory with wrong board!!!", data.fleet);
+                shared.tx.send(msg).unwrap();
+            }
+
+        }
+        else {
+            let msg = format!("Player {} not in game", data.fleet);
+            shared.tx.send(msg).unwrap();
+        }
+    }
+    else {
+        let msg = format!("Game {} does not exist", data.gameid);
+        shared.tx.send(msg).unwrap();
+    }
+
     "OK".to_string()
 }
