@@ -24,7 +24,7 @@ async fn send_receipt(action: Command, receipt: Receipt) -> String {
     })
     .send()
     .await;
-    
+
     match res {
         Ok(response) => response.text().await.unwrap(),
         Err(_) => "Error sending receipt".to_string(),
@@ -75,7 +75,7 @@ pub fn unmarshal_data(idata: &FormData) -> Result<(String, String, Vec<u8>, Stri
     .random
     .clone()
     .ok_or_else(|| "You must provide a Random Seed".to_string())?;
-    
+
     let board = idata
     .board
     .as_ref()
@@ -94,7 +94,7 @@ pub fn unmarshal_data(idata: &FormData) -> Result<(String, String, Vec<u8>, Stri
             .collect::<Result<Vec<u8>, String>>()
         })
     })??;
-    
+
     Ok((gameid, fleetid, board, random))
 }
 
@@ -113,7 +113,7 @@ fn get_coordinates(x: &Option<String>, y: &Option<String>) -> Result<(u8, u8), S
             Err("Invalid X coordinate".to_string())
         }
     })?;
-    
+
     let y: u8 = y
     .as_ref()
     .ok_or_else(|| "You must provide a Y coordinate".to_string())
@@ -128,7 +128,7 @@ fn get_coordinates(x: &Option<String>, y: &Option<String>) -> Result<(u8, u8), S
             Err("Invalid Y coordinate".to_string())
         }
     })?;
-    
+
     Ok((x, y))
 }
 
@@ -141,7 +141,7 @@ pub fn unmarshal_fire(
     .targetfleet
     .clone()
     .ok_or_else(|| "You must provide a Target Fleet ID".to_string())?;
-    
+
     Ok((gameid, fleetid, board, random, targetfleet, x, y))
 }
 
@@ -161,7 +161,7 @@ pub fn unmarshal_report(
             Err("Report must be either 'Hit' or 'Miss'".to_string())
         }
     })?;
-    
+
     Ok((gameid, fleetid, board, random, report, x, y))
 }
 

@@ -5,13 +5,14 @@ use sha2::{Digest as _, Sha256};
 
 fn main() {
     // Read the input
-    let input: FireInputs = env::read();
-
-    // Extract the random value
+    let input: FireInputs = env::read();    // Extract the random value
     let random = input.random.clone();
 
-    // Verify that at least one ship is not sunk
-    let _has_unsunk_ship = input.board.iter().any(|&cell| cell != 0);
+    // Verify that at least one ship exists on the board
+    let _has_ships = !input.board.is_empty();
+
+    // Debug: Print the board state
+    eprintln!("Board state during fire: {:?}", input.board);
 
     // Hash your board state for evidence
     let mut hasher = Sha256::new();

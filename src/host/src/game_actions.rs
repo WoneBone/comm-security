@@ -43,7 +43,8 @@ pub async fn fire(idata: FormData) -> String {
         Ok(values) => values,
         Err(err) => return err,
     };
-    // TO DO: Rebuild the receipt
+
+    let pos = (y * 10 + x) as u8;
 
     // Set up the zkVM environment
     let receipt = {
@@ -54,7 +55,7 @@ pub async fn fire(idata: FormData) -> String {
                 board: board.clone(),
                 random: random.clone(),
                 target: targetfleet.clone(),
-                pos: (x.clone() << 4) | y.clone(),
+                pos: pos.clone(),
             })
             .unwrap()
             .build()
@@ -74,15 +75,37 @@ pub async fn fire(idata: FormData) -> String {
 }
 
 pub async fn report(idata: FormData) -> String {
-    let (gameid, fleetid, board, random, _report, x, y) = match unmarshal_report(&idata) {
+    let (gameid, fleetid, board, random, report, x, y) = match unmarshal_report(&idata) {
         Ok(values) => values,
         Err(err) => return err,
     };
-    // TO DO: Rebuild the receipt
 
-    // Uncomment the following line when you are ready to send the receipt
-    //send_receipt(Command::Fire, receipt).await
-    // Comment out the following line when you are ready to send the receipt
+    let pos = (y * 10 + x) as u8;
+
+    // Set up the zkVM environment
+    let receipt = {
+        let env = ExecutorEnv::builder()
+            .write(&fleetcore::ReportInputs {
+                gameid: gameid.clone(),
+                fleet: fleetid.clone(),
+                board: board.clone(),
+                random: random.clone(),
+                report: report.clone(),
+                pos: pos.clone(),
+            })
+            .unwrap()
+            .build()
+            .unwrap();
+        // Obtain the default prover
+        let prover = default_prover();
+
+        // Produce a receipt by proving the specified ELF binary
+        prover.prove(env, REPORT_ELF).unwrap().receipt
+    };
+
+    // Send the receipt to the blockchain server
+    send_receipt(Command::Report, receipt).await;
+
     "OK".to_string()
 }
 
