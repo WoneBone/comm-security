@@ -114,10 +114,24 @@
 </head>
 
 <body>
-
+    <div id="game-info" style="display: flex; flex-direction: column; margin-bottom: 10px;">
+        <div style="font-weight: bold; margin-bottom: 5px;">Game Info:</div>
+        <div id="current-game">Game ID: <span id="display-gameid">{gameid}</span></div>
+        <div id="current-player">Your Fleet ID: <span id="display-fleetid">{fleetid}</span></div>
+    </div>
 
     <div class="grid">
         <!-- JavaScript will populate the 10x10 grid -->
+    </div>
+
+    <div style="margin: 10px 5px;">
+        <div style="font-weight: bold;">Board Legend:</div>
+        <div style="display: flex; align-items: center; margin-top: 5px;">
+            <div style="width: 20px; height: 20px; background-color: black; margin-right: 5px;"></div>
+            <span>Your Ships</span>
+            <div style="width: 20px; height: 20px; background-color: red; margin: 0 5px 0 15px;"></div>
+            <span>Shots Fired</span>
+        </div>
     </div>
 
     <script>
@@ -157,21 +171,22 @@
                 } else {
                     cell.style.backgroundColor = 'black';
                 }
-            });
-            gridContainer.appendChild(cell);
+            }); gridContainer.appendChild(cell);
         }
 
         function submitForm(event) {
-            //event.preventDefault();
+            // We'll keep the default form submission behavior
+            // but make sure game state is preserved
 
             document.body.style.cursor = "wait";
             getBoard(event);
             const form = document.querySelector('form');
-            //form.submit(); // Submit the form programmatically
+
+            // Disable buttons to prevent multiple submissions
             setTimeout(() => {
                 const buttons = form.querySelectorAll('button[type="submit"]');
                 buttons.forEach(button => button.disabled = true);
-            }, 10); // Small delay (0 ms)
+            }, 10); // Small delay
         }
 
         function getBoard(event) {
@@ -189,10 +204,27 @@
             });
             form.querySelector('#board').value = encodeURIComponent(board.join(','));
             form.querySelector('#shots').value = encodeURIComponent(shots.join(','));
+            // Get current values from the form
+            const currentGameId = form.querySelector('input[name="gameid"]').value || '{gameid}';
+            const currentFleetId = form.querySelector('input[name="fleetid"]').value || '{fleetid}';
+
+            // Save to session storage for persistence within this browser tab
+            sessionStorage.setItem('battleship_game_id', currentGameId);
+            sessionStorage.setItem('battleship_fleet_id', currentFleetId);
+
+            // Update display in the header
+            document.getElementById('display-gameid').textContent = currentGameId;
+            document.getElementById('display-fleetid').textContent = currentFleetId;
+
+            // Make sure the values are set in the form
             const button = event.submitter;
-            if (button.value !== 'Join') {
-                form.querySelector('input[name="gameid"]').value = '{gameid}';
-                form.querySelector('input[name="fleet"]').value = '{fleetid}';
+            if (button && button.value !== 'Join') {
+                form.querySelector('input[name="gameid"]').value = currentGameId;
+                form.querySelector('input[name="fleetid"]').value = currentFleetId;
+            } else {
+                // If joining, store the values for after submission
+                sessionStorage.setItem('last_joined_game_id', currentGameId);
+                sessionStorage.setItem('last_joined_fleet_id', currentFleetId);
             }
         }
     </script>
@@ -238,7 +270,52 @@
             <p>{response_html}</p>
         </div>
     </div>
+    <script>
+        // Initialize form values from sessionStorage when page loads
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get values from session storage (current browser tab only)
+            const storedGameId = sessionStorage.getItem('battleship_game_id') || '{gameid}';
+            const storedFleetId = sessionStorage.getItem('battleship_fleet_id') || '{fleetid}';
 
+            const form = document.querySelector('form');
+            const gameIdInput = form.querySelector('input[name="gameid"]');
+            const fleetIdInput = form.querySelector('input[name="fleetid"]');
+
+            // Set values from session storage if they exist
+            if (storedGameId && storedGameId !== 'undefined' && storedGameId !== '') {
+                gameIdInput.value = storedGameId;
+                document.getElementById('display-gameid').textContent = storedGameId;
+            } else if ('{gameid}' && '{gameid}' !== 'undefined' && '{gameid}' !== '') {
+                gameIdInput.value = '{gameid}';
+                document.getElementById('display-gameid').textContent = '{gameid}';
+                sessionStorage.setItem('battleship_game_id', '{gameid}');
+            }
+
+            if (storedFleetId && storedFleetId !== 'undefined' && storedFleetId !== '') {
+                fleetIdInput.value = storedFleetId;
+                document.getElementById('display-fleetid').textContent = storedFleetId;
+            } else if ('{fleetid}' && '{fleetid}' !== 'undefined' && '{fleetid}' !== '') {
+                fleetIdInput.value = '{fleetid}';
+                document.getElementById('display-fleetid').textContent = '{fleetid}';
+                sessionStorage.setItem('battleship_fleet_id', '{fleetid}');
+            }
+
+            // Add listeners to update sessionStorage and display when values change
+            gameIdInput.addEventListener('change', function (e) {
+                if (e.target.value) {
+                    sessionStorage.setItem('battleship_game_id', e.target.value);
+                    document.getElementById('display-gameid').textContent = e.target.value;
+                }
+            });
+
+            fleetIdInput.addEventListener('change', function (e) {
+                if (e.target.value) {
+                    sessionStorage.setItem('battleship_fleet_id', e.target.value);
+                    document.getElementById('display-fleetid').textContent = e.target.value;
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
