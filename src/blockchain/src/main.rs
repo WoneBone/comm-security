@@ -145,9 +145,9 @@ fn handle_join(shared: &SharedData, input_data: &CommunicationData) -> String {
         current_state: data.board.clone(),
     }).name == data.fleet;
     let mesg = if player_inserted {
-        format!("Joined game {}", data.gameid)
+        format!("Player {} joined game {}", data.fleet, data.gameid)
     } else {
-        format!("Player already in game {}", data.gameid)
+        format!("Player {} already in game {}", data.fleet, data.gameid)
     };
     shared.tx.send(mesg).unwrap();
     "OK".to_string()
@@ -185,7 +185,7 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
                 }
             }
             else {
-                let msg = format!("Not your turn dummy");
+                let msg = format!("Player {}, not your turn dummy!", data.fleet);
                 shared.tx.send(msg).unwrap();
             }
         }
@@ -195,7 +195,7 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
         }
     }
     else {
-        let msg = format!("game {} does not exist", data.gameid);
+        let msg = format!("Game {} does not exist", data.gameid);
         shared.tx.send(msg).unwrap();
     }
 
@@ -221,25 +221,25 @@ fn handle_report(shared: &SharedData, input_data: &CommunicationData) -> String 
                 if game.next_player == Some(data.fleet.clone()) { //check if turn
                     if player.current_state == data.board { //Check if report is for the correct board
                         if game.next_report == Some(xy_pos(data.pos)) { //check if report is for the correct position
-                                                                            
+
                             player.current_state = data.next_board.clone();
                             game.next_report = None;
 
-                            let msg = format!("Player {} reported {} at pos {}. His updated board is {}.", data.fleet, data.report, xy_pos(data.pos), data.next_board);
+                            let msg = format!("Player {} reported {} at pos {}", data.fleet, data.report, xy_pos(data.pos));
                             shared.tx.send(msg).unwrap();
                         }
                         else {
-                            let msg = format!("Report of wrong position. Shot was at pos {}", game.next_report.as_ref().unwrap_or(&"unknown".to_string()));
+                            let msg = format!("Player {} reported wrong position. Shot was at pos {}", data.fleet, game.next_report.as_ref().unwrap_or(&"unknown".to_string()));
                             shared.tx.send(msg).unwrap();
                         }
                     }
                     else {
-                        let msg = format!("Report of wrong board. Current board hash is: {}", player.current_state);
+                        let msg = format!("Player {} reported the wrong board", data.fleet);
                         shared.tx.send(msg).unwrap();
                     }
                 }
                 else {
-                    let msg = format!("Not your turn dummy");
+                    let msg = format!("Player {}, not your turn dummy!", data.fleet);
                     shared.tx.send(msg).unwrap();
                 }
             }
@@ -276,7 +276,7 @@ fn handle_wave(shared: &SharedData, input_data: &CommunicationData) -> String {
                     }
                 }
                 else {
-                    let msg = format!("Not your turn dummy");
+                    let msg = format!("Player {}, not your turn dummy!", data.fleet);
                     shared.tx.send(msg).unwrap();
                 }
             }
@@ -313,7 +313,7 @@ fn handle_win(shared: &SharedData, input_data: &CommunicationData) -> String {
                 shared.tx.send(msg).unwrap();
             }
             else {
-                let msg = format!("Player {} claiming victory with wrong board!!!", data.fleet);
+                let msg = format!("Player {} claiming victory with the wrong board!!!", data.fleet);
                 shared.tx.send(msg).unwrap();
             }
 
