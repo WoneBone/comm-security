@@ -169,11 +169,8 @@ fn handle_fire(shared: &SharedData, input_data: &CommunicationData) -> String {
                 if game.next_report.is_none() { //check if the previous report has been addressed
                     if game.pmap.contains_key(&data.target) { //check if the fleet exists
                         game.next_player = Some(data.target.clone());
-                        game.next_report = Some(data.pos.to_string());
-                        let x = (data.pos % 10 + b'A') as char;
-                        let y = (data.pos / 10);
-                        let msg = format!("Player {} fired at player {} at pos {}.{}", data.fleet, data.target, 
-                            x, y);
+                        game.next_report = Some(xy_pos(data.pos));
+                        let msg = format!("Player {} fired at player {} at pos {}", data.fleet, data.target, xy_pos(data.pos));
                         shared.tx.send(msg).unwrap();
                     }
 
@@ -216,21 +213,19 @@ fn handle_report(shared: &SharedData, input_data: &CommunicationData) -> String 
     let mut gmap = shared.gmap.lock().unwrap();
     if let Some(game) = gmap.get_mut(&data.gameid) { //get the game with game id
         if let Some(player) = game.pmap.get_mut(&data.fleet) { //check if the fleet exists
-            if game.next_report.is_none() { // check if game has report
+            if game.next_report.is_none() { // Check if there is a report to handle
                 let msg = format!("No report to handle in this game");
                 shared.tx.send(msg).unwrap();
             }
             else {
                 if game.next_player == Some(data.fleet.clone()) { //check if turn
                     if player.current_state == data.board { //Check if report is for the correct board
-                        if game.next_report == Some(data.pos.to_string()) { //check if report is for the correct position
+                        if game.next_report == Some(xy_pos(data.pos)) { //check if report is for the correct position
                                                                             
-                            let x = (data.pos % 10 + b'A') as char;
-                            let y = (data.pos / 10);
                             player.current_state = data.next_board.clone();
                             game.next_report = None;
 
-                            let msg = format!("Player {} reported {} at pos {}. His updated board is {}.", data.fleet, data.report, data.pos, data.next_board);
+                            let msg = format!("Player {} reported {} at pos {}. His updated board is {}.", data.fleet, data.report, xy_pos(data.pos), data.next_board);
                             shared.tx.send(msg).unwrap();
                         }
                         else {
